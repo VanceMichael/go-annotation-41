@@ -93,8 +93,13 @@ func (s *Service) Dispose(it model.Interception) (Disposal, error) {
 	}
 
 	s.mu.RLock()
-	h := s.handlers[it.Measure]
+	h, ok := s.handlers[it.Measure]
 	s.mu.RUnlock()
+
+	if !ok || h == nil {
+		return Disposal{}, fmt.Errorf("%w: 口岸 %s 未注册「%s」的处置器",
+			model.ErrHandlerMissing, s.portCode, it.Measure.DisplayName())
+	}
 
 	d, err := h(it)
 	if err != nil {
